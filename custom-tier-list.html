@@ -1,32 +1,142 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Пользовательский Тир-лист</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      margin: 0; padding: 30px 20px;
-      background: #10131b; color: white;
+      margin: 0;
+      padding: 25px 16px;
+      background: #10131b;
+      color: white;
       font-family: Arial, sans-serif;
     }
-    main { max-width: 900px; margin: auto; }
-    h1 { text-align: center; margin-bottom: 30px; }
-    a { color: #65a9ff; text-decoration: none; }
-    .back { display: inline-block; margin-bottom: 25px; }
-    .empty {
-      text-align: center; color: #929bad;
-      padding: 50px 20px; background: #202839;
-      border: 1px solid #35445e; border-radius: 12px;
+
+    main {
+      width: 100%;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 25px;
+      color: #65a9ff;
+      text-decoration: none;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 10px 0 30px;
+    }
+
+    #cards {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      width: 100%;
+    }
+
+    .card {
+      width: 100%;
+      padding: 22px;
+      border-radius: 16px;
+      background: #202839;
+      border: 1px solid #35445e;
+      line-height: 1.6;
+      font-size: 17px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .empty, .status {
+      text-align: center;
+      padding: 35px 20px;
+      color: #929bad;
+      background: #202839;
+      border-radius: 12px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 18px 12px;
+      }
+
+      .card {
+        padding: 17px;
+      }
     }
   </style>
 </head>
+
 <body>
   <main>
     <a class="back" href="index.html">← На главную</a>
+
     <h1>Пользовательский Тир-лист</h1>
-    <div class="empty">Здесь будут пользовательские карточки</div>
+
+    <div id="cards">
+      <div class="status">Загружаем карточки...</div>
+    </div>
   </main>
+
+  <script>
+    const SUPABASE_URL =
+      'https://qbcqsfdygoyvthvjmhvi.supabase.co';
+
+    const SUPABASE_KEY =
+      'sb_publishable_HGHRx0sT5jgU-Kkg6yU_bw_g3exj4uW';
+
+    const db = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const cardsContainer = document.getElementById('cards');
+
+    async function loadCards() {
+      const { data, error } = await db
+        .from('tier_items')
+        .select('*')
+        .eq('kind', 'custom')
+        .order('position', { ascending: true });
+
+      if (error) {
+        cardsContainer.innerHTML =
+          '<div class="empty">Не удалось загрузить карточки. Проверьте подключение и права доступа к базе.</div>';
+        console.error(error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        cardsContainer.innerHTML =
+          '<div class="empty">Пока здесь нет карточек. Скоро они появятся!</div>';
+        return;
+      }
+
+      cardsContainer.innerHTML = '';
+
+      data.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'card';
+
+        card.style.color = item.text_color || '#65A9FF';
+        card.textContent = item.description || item.title || '';
+
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    loadCards();
+  </script>
 </body>
 </html>
