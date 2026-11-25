@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тир-лист</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 30px 20px;
+      background: #10131b; color: white;
+      font-family: Arial, sans-serif;
+    }
+    main { max-width: 900px; margin: auto; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    a { color: #65a9ff; text-decoration: none; }
+    .back { display: inline-block; margin-bottom: 25px; }
+    .empty {
+      text-align: center; color: #929bad;
+      padding: 50px 20px; background: #202839;
+      border: 1px solid #35445e; border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="index.html">← На главную</a>
+    <h1>Тир-лист</h1>
+    <div class="empty">Здесь будут карточки тир-листа</div>
+  </main>
+</body>
+</html>
