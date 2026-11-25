@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админка — TEAR LIST</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 25px 16px;
+      background: #10131b;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    main {
+      max-width: 950px;
+      margin: auto;
+    }
+
+    h1, h2 { text-align: center; }
+
+    a {
+      color: #65a9ff;
+      text-decoration: none;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: #202839;
+      border: 1px solid #35445e;
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      margin: 7px 0 16px;
+      border-radius: 8px;
+      border: 1px solid #465570;
+      background: #151c29;
+      color: white;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    label {
+      display: block;
+      color: #c4cede;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 11px 17px;
+      border: 0;
+      border-radius: 8px;
+      background: #315b91;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      margin: 4px;
+    }
+
+    button:hover { background: #4277b8; }
+
+    button.danger { background: #8b343d; }
+    button.secondary { background: #46536a; }
+
+    .hidden { display: none !important; }
+
+    #message {
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 8px;
+      color: #dce8ff;
+      background: #26354a;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .item {
+      padding: 15px;
+      margin: 12px 0;
+      background: #151c29;
+      border: 1px solid #35445e;
+      border-radius: 10px;
+    }
+
+    .item-title {
+      font-size: 18px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .item-description {
+      color: #aebbd0;
+      margin-top: 7px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .item-actions {
+      margin-top: 10px;
+    }
+
+    .color-input {
+      height: 48px;
+      padding: 4px;
+    }
+
+    .hint {
+      color: #929bad;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 15px 10px; }
+      .panel { padding: 15px; }
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <a class="back" href="index.html">← На главную</a>
+
+  <h1>TEAR LIST — Админка</h1>
+
+  <div id="message" class="hidden"></div>
+
+  <!-- Вход -->
+  <section id="loginPanel" class="panel">
+    <h2>Вход администратора</h2>
+
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" type="email" required autocomplete="username">
+
+      <label for="password">Пароль</label>
+      <input id="password" type="password" required
+             autocomplete="current-password">
+
+      <button type="submit">Войти</button>
+    </form>
+  </section>
+
+  <!-- Панель администратора -->
+  <section id="adminPanel" class="hidden">
+
+    <div class="panel">
+      <h2>Управление карточками</h2>
+
+      <label for="kind">Выбери раздел</label>
+      <select id="kind">
+        <option value="regular">Обычный тир-лист</option>
+        <option value="custom">Пользовательский тир-лист</option>
+      </select>
+
+      <button id="logoutButton" class="secondary">
+        Выйти из аккаунта
+      </button>
+    </div>
+
+    <!-- Форма карточки -->
+    <div class="panel">
+      <h2 id="formTitle">Добавить карточку</h2>
+
+      <form id="cardForm">
+        <label for="title">Название карточки</label>
+        <input id="title" type="text" placeholder="Название">
+
+        <div id="photoField">
+          <label for="photo">Фотография</label>
+          <input id="photo" type="file" accept="image/*">
+          <p class="hint">
+            Можно оставить пустым, если фотография не нужна.
+            При редактировании без нового файла старая фотография сохранится.
+          </p>
+        </div>
+
+        <label for="description">Основной текст</label>
+        <textarea id="description" placeholder="Текст карточки"></textarea>
+
+        <div id="extraFields">
+          <label for="verifier">Верификация</label>
+          <textarea id="verifier" placeholder="Текст верификации"></textarea>
+
+          <label for="victories">Виктору</label>
+          <textarea id="victories" placeholder="Текст"></textarea>
+        </div>
+
+        <label for="textColor">Цвет текста</label>
+        <input id="textColor" class="color-input"
+               type="color" value="#65A9FF">
+
+        <button id="saveButton" type="submit">
+          Добавить карточку
+        </button>
+
+        <button id="cancelButton" type="button"
+                class="secondary hidden">
+          Отмена редактирования
+        </button>
+      </form>
+    </div>
+
+    <!-- Список -->
+    <div class="panel">
+      <h2>Существующие карточки</h2>
+      <p class="hint">
+        Стрелками можно менять порядок карточек.
+      </p>
+      <div id="cardList">Загрузка...</div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const SUPABASE_URL =
+    'https://qbcqsfdygoyvthvjmhvi.supabase.co';
+
+  const SUPABASE_KEY =
+    'sb_publishable_HGHRx0sT5jgU-Kkg6yU_bw_g3exj4uW';
+
+  const db = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  const $ = id => document.getElementById(id);
+
+  let cards = [];
+  let editingId = null;
+  let existingImage = null;
+
+  function showMessage(text) {
+    $('message').textContent = text;
+    $('message').classList.remove('hidden');
+  }
+
+  function hideMessage() {
+    $('message').classList.add('hidden');
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]);
+  }
+
+  function currentKind() {
+    return $('kind').value;
+  }
+
+  function updateFormForKind() {
+    const custom = currentKind() === 'custom';
+
+    $('title').parentElement.classList.toggle('hidden', custom);
+    $('photoField').classList.toggle('hidden', custom);
+    $('extraFields').classList.toggle('hidden', custom);
+
+    if (editingId) {
+      cancelEditing();
+    }
+  }
+
+  async function checkAdmin() {
+    const { data: { user }, error: userError } =
+      await db.auth.getUser();
+
+    if (userError || !user) {
+      $('loginPanel').classList.remove('hidden');
+      $('adminPanel').classList.add('hidden');
+      return false;
+    }
+
+    const { data, error } = await db
+      .from('admin_users')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      showMessage(
+        'Не удалось проверить права администратора: ' +
+        error.message
+      );
+      $('loginPanel').classList.add('hidden');
+      $('adminPanel').classList.add('hidden');
+      return false;
+    }
+
+    if (!data) {
+      await db.auth.signOut();
+      showMessage(
+        'У этого аккаунта нет прав администратора.'
+      );
+      $('loginPanel').classList.remove('hidden');
+      $('adminPanel').classList.add('hidden');
+      return false;
+    }
+
+    $('loginPanel').classList.add('hidden');
+    $('adminPanel').classList.remove('hidden');
+
+    await loadCards();
+    return true;
+  }
+
+  $('loginForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    hideMessage();
+
+    const email = $('email').value.trim();
+    const password = $('password').value;
+
+    const { error } = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      showMessage('Ошибка входа: ' + error.message);
+      return;
+    }
+
+    await checkAdmin();
+  });
+
+  $('logoutButton').addEventListener('click', async () => {
+    await db.auth.signOut();
+    cards = [];
+    $('adminPanel').classList.add('hidden');
+    $('loginPanel').classList.remove('hidden');
+    showMessage('Вы вышли из аккаунта.');
+  });
+
+  async function loadCards() {
+    const { data, error } = await db
+      .from('tier_items')
+      .select('*')
+      .eq('kind', currentKind())
+      .order('position', { ascending: true });
+
+    if (error) {
+      showMessage('Ошибка загрузки карточек: ' + error.message);
+      return;
+    }
+
+    cards = data || [];
+    renderCards();
+  }
+
+  function renderCards() {
+    const list = $('cardList');
+
+    if (!cards.length) {
+      list.innerHTML =
+        '<p class="hint">В этом разделе пока нет карточек.</p>';
+      return;
+    }
+
+    list.innerHTML = cards.map((item, index) => {
+      const name = item.title || item.description || 'Без названия';
+
+      return `
+        <div class="item">
+          <div class="item-title">
+            ${index + 1}. ${escapeHTML(name)}
+          </div>
+
+          <div class="item-description">
+            ${escapeHTML(item.description)}
+          </div>
+
+          <div class="item-actions">
+            <button data-action="up" data-index="${index}"
+                    ${index === 0 ? 'disabled' : ''}>↑</button>
+
+            <button data-action="down" data-index="${index}"
+                    ${index === cards.length - 1 ? 'disabled' : ''}>↓</button>
+
+            <button data-action="edit" data-index="${index}">
+              Изменить
+            </button>
+
+            <button class="danger"
+                    data-action="delete" data-index="${index}">
+              Удалить
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  $('cardList').addEventListener('click', async event => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+
+    const index = Number(button.dataset.index);
+    const action = button.dataset.action;
+    const item = cards[index];
+
+    if (!item) return;
+
+    if (action === 'edit') {
+      startEditing(item);
+    }
+
+    if (action === 'delete') {
+      const confirmed = confirm(
+        'Удалить карточку "' +
+        (item.title || item.description) +
+        '"?'
+      );
+
+      if (!confirmed) return;
+
+      const { error } = await db
+        .from('tier_items')
+        .delete()
+        .eq('id', item.id);
+
+      if (error) {
+        showMessage('Не удалось удалить карточку: ' + error.message);
+        return;
+      }
+
+      if (editingId === item.id) cancelEditing();
+
+      showMessage('Карточка удалена.');
+      await loadCards();
+    }
+
+    if (action === 'up' || action === 'down') {
+      const newIndex = action === 'up' ? index - 1 : index + 1;
+
+      if (newIndex < 0 || newIndex >= cards.length) return;
+
+      const reordered = [...cards];
+      const [moved] = reordered.splice(index, 1);
+      reordered.splice(newIndex, 0, moved);
+
+      for (let i = 0; i < reordered.length; i++) {
+        const { error } = await db
+          .from('tier_items')
+          .update({ position: (i + 1) * 10 })
+          .eq('id', reordered[i].id);
+
+        if (error) {
+          showMessage(
+            'Ошибка изменения порядка: ' + error.message
+          );
+          await loadCards();
+          return;
+        }
+      }
+
+      showMessage('Порядок карточек изменён.');
+      await loadCards();
+    }
+  });
+
+  function startEditing(item) {
+    editingId = item.id;
+    existingImage = item.image_url;
+
+    $('formTitle').textContent = 'Редактировать карточку';
+    $('saveButton').textContent = 'Сохранить изменения';
+    $('cancelButton').classList.remove('hidden');
+
+    $('title').value = item.title || '';
+    $('description').value = item.description || '';
+    $('verifier').value = item.verifier || '';
+    $('victories').value = item.victories || '';
+    $('textColor').value = item.text_color || '#65A9FF';
+    $('photo').value = '';
+
+    $('formTitle').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function cancelEditing() {
+    editingId = null;
+    existingImage = null;
+
+    $('cardForm').reset();
+    $('textColor').value = '#65A9FF';
+    $('formTitle').textContent = 'Добавить карточку';
+    $('saveButton').textContent = 'Добавить карточку';
+    $('cancelButton').classList.add('hidden');
+  }
+
+  $('cancelButton').addEventListener('click', cancelEditing);
+
+  async function uploadPhoto(file, kind) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = kind + '/' + crypto.randomUUID() + '-' + safeName;
+
+    const { error } = await db.storage
+      .from('tier-photos')
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data } = db.storage
+      .from('tier-photos')
+      .getPublicUrl(path);
+
+    return data.publicUrl;
+  }
+
+  $('cardForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    hideMessage();
+
+    const kind = currentKind();
+    const custom = kind === 'custom';
+    const file = $('photo').files[0];
+
+    if (!custom && !$('title').value.trim()) {
+      showMessage('Укажи название карточки.');
+      return;
+    }
+
+    if (!$('description').value.trim() &&
+        (custom || !$('title').value.trim())) {
+      showMessage('Заполни основной текст карточки.');
+      return;
+    }
+
+    const saveButton = $('saveButton');
+    saveButton.disabled = true;
+    saveButton.textContent = 'Сохранение...';
+
+    try {
+      let imageUrl = custom ? null : existingImage;
+
+      if (!custom && file) {
+        imageUrl = await uploadPhoto(file, kind);
+      }
+
+      const values = {
+        kind,
+        title: custom ? '' : $('title').value.trim(),
+        description: $('description').value.trim(),
+        verifier: custom ? '' : $('verifier').value.trim(),
+        victories: custom ? '' : $('victories').value.trim(),
+        text_color: $('textColor').value,
+        image_url: imageUrl
+      };
+
+      let error;
+
+      if (editingId) {
+        ({ error } = await db
+          .from('tier_items')
+          .update(values)
+          .eq('id', editingId));
+      } else {
+        const nextPosition = cards.length
+          ? Math.max(...cards.map(card => Number(card.position) || 0)) + 10
+          : 10;
+
+        ({ error } = await db
+          .from('tier_items')
+          .insert({
+            ...values,
+            position: nextPosition
+          }));
+      }
+
+      if (error) throw error;
+
+      showMessage(
+        editingId ? 'Изменения сохранены.' : 'Карточка добавлена.'
+      );
+
+      cancelEditing();
+      await loadCards();
+
+    } catch (error) {
+      showMessage('Ошибка сохранения: ' + error.message);
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = editingId
+        ? 'Сохранить изменения'
+        : 'Добавить карточку';
+    }
+  });
+
+  $('kind').addEventListener('change', async () => {
+    updateFormForKind();
+    hideMessage();
+    await loadCards();
+  });
+
+  updateFormForKind();
+  checkAdmin();
+</script>
+</body>
+</html>
