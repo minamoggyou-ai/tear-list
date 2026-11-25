@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tear List</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #10131b;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      color: #929bad;
+      margin-bottom: 40px;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    a {
+      display: block;
+      padding: 22px;
+      border-radius: 12px;
+      background: #202839;
+      border: 1px solid #35445e;
+      color: white;
+      text-decoration: none;
+      font-size: 19px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    a:hover {
+      background: #30415e;
+      transform: translateY(-2px);
+    }
+
+    footer {
+      margin-top: 45px;
+      color: #626d80;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>TEAR LIST</h1>
+    <p class="subtitle">Выбери нужный раздел</p>
+
+    <nav class="menu">
+      <a href="tier-list.html">Тир-лист</a>
+      <a href="custom-tier-list.html">
+        Пользовательский Тир-лист
+      </a>
+    </nav>
+
+    <footer>
+      TEAR LIST
+    </footer>
+  </main>
+</body>
+</html>
